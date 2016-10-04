@@ -34,13 +34,17 @@ def svm_loss_naive(W, X, y, reg):
       margin = scores[j] - correct_class_score + 1 # note delta = 1
       if margin > 0:
         loss += margin
-
+        dW[:, j] += X[i]
+    # use .dot to make summation faster.
+    dW[:, y[i]] -= dW.dot(np.ones([num_classes]))
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   loss /= num_train
+  dW /= num_train
 
   # Add regularization to the loss.
   loss += 0.5 * reg * np.sum(W * W)
+  dW += reg * W
 
   #############################################################################
   # TODO:                                                                     #
@@ -69,7 +73,17 @@ def svm_loss_vectorized(W, X, y, reg):
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-  pass
+  num_train = X.shape[0]
+  num_class = W.shape[1]
+  var_delta = 1
+  XdW = X.dot(W)
+  correct_class_scores = XdW[range(num_train), y].reshape(num_train, -1)
+  Margin = XdW - correct_class_scores + np.ones([num_train, var_delta])
+  Margin[range(num_train), y] = 0
+  margin_gt_0 = Margin[Margin>0]
+  sum_margin = margin_gt_0.dot(np.ones([margin_gt_0.shape[0], 1]))
+  W_row = W.flatten()
+  loss = (sum_margin/num_train) + 0.5*reg*W_row.dot(W_row.T)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -84,7 +98,10 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+  Margin_mask = Margin>0
+  Margin_mask = Margin_mask.astype(int, copy=False)
+  Margin_mask[range(num_train), y] = -Margin_mask.dot(np.ones(num_class))
+  dW = X.T.dot(Margin_mask) / num_train + reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
