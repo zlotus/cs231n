@@ -81,9 +81,8 @@ def svm_loss_vectorized(W, X, y, reg):
   Margin = XdW - correct_class_scores + np.ones([num_train, var_delta])
   Margin[range(num_train), y] = 0
   margin_gt_0 = Margin[Margin>0]
-  sum_margin = margin_gt_0.dot(np.ones([margin_gt_0.shape[0], 1]))
-  W_row = W.flatten()
-  loss = (sum_margin/num_train) + 0.5*reg*W_row.dot(W_row.T)
+  sum_margin = np.sum(margin_gt_0)
+  loss = (sum_margin/num_train) + 0.5*reg*np.sum(W * W)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
