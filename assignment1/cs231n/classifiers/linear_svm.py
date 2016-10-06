@@ -76,13 +76,13 @@ def svm_loss_vectorized(W, X, y, reg):
   num_train = X.shape[0]
   num_class = W.shape[1]
   var_delta = 1
-  XdW = X.dot(W)
-  correct_class_scores = XdW[range(num_train), y].reshape(num_train, -1)
-  Margin = XdW - correct_class_scores + np.ones([num_train, var_delta])
+  Score = X.dot(W)
+  correct_class_scores = Score[range(num_train), y].reshape(num_train, -1)
+  Margin = Score - correct_class_scores + np.ones([num_train, var_delta])
   Margin[range(num_train), y] = 0
-  margin_gt_0 = Margin[Margin>0]
-  sum_margin = np.sum(margin_gt_0)
-  loss = (sum_margin/num_train) + 0.5*reg*np.sum(W * W)
+  Margin_max = Margin[Margin>0]
+  data_loss = np.sum(Margin_max)
+  loss = (data_loss/num_train) + 0.5*reg*np.sum(W * W)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -97,10 +97,10 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  Margin_mask = Margin>0
-  Margin_mask = Margin_mask.astype(int, copy=False)
-  Margin_mask[range(num_train), y] = -Margin_mask.dot(np.ones(num_class))
-  dW = X.T.dot(Margin_mask) / num_train + reg * W
+  dMargin_mask = Margin>0
+  dMargin_mask = dMargin_mask.astype(int, copy=False)
+  dMargin_mask[range(num_train), y] = -dMargin_mask.dot(np.ones(num_class))
+  dW = X.T.dot(dMargin_mask) / num_train + reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
