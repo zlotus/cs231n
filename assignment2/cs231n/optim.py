@@ -104,6 +104,7 @@ def rmsprop(x, dx, config=None):
   #############################################################################
   decay_rate, cache, learning_rate, epsilon = config['decay_rate'], \
     config['cache'], config['learning_rate'], config['epsilon']
+  
   cache = decay_rate*cache + (1-decay_rate)*(dx**2)
   x += -learning_rate*dx / (np.sqrt(cache)+epsilon)
   config['cache'] = cache
@@ -147,6 +148,7 @@ def adam(x, dx, config=None):
   learning_rate, beta1, beta2, epsilon, m, v, t = config['learning_rate'], \
     config['beta1'], config['beta2'], config['epsilon'], config['m'], \
     config['v'], config['t']+1
+  
   m = beta1*m + (1-beta1)*dx
   v = beta2*v + (1-beta2)*(dx**2)
   mb = m / (1-beta1**t) # correct bias

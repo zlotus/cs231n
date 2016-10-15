@@ -1,4 +1,5 @@
 import numpy as np
+import re
 
 from cs231n.layers import *
 from cs231n.layer_utils import *
@@ -184,6 +185,9 @@ class FullyConnectedNet(object):
         ins, outs = hidden_dims[i-1], hidden_dims[i]
       self.params['W%d' % (i+1)] = weight_scale * np.random.randn(ins, outs)
       self.params['b%d' % (i+1)] = np.zeros(outs)
+      if self.use_batchnorm and i!=self.num_layers-1:
+        self.params['gamma%d' % (i+1)] = np.ones(outs)
+        self.params['beta%d' % (i+1)] = np.ones(outs)
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -241,19 +245,26 @@ class FullyConnectedNet(object):
     # self.bn_params[1] to the forward pass for the second batch normalization #
     # layer, etc.                                                              #
     ############################################################################
-    outs, caches = [], []
-    inputs = None
-    for i in xrange(1, self.num_layers):
+    caches = []
+    inputs, outi = None, None
+    for i in xrange(1, self.num_layers):                       # L_1,...,L_{n-1}
       Wi, bi = self.params['W%d' % i], self.params['b%d' % i]
       if i == 1:
         inputs = X
       else:
-        inputs = outs.pop()
+        inputs = outi
       outi, cachei = affine_forward(inputs, Wi, bi)
       caches.append(cachei)
+      if self.use_batchnorm:
+        gamma, beta = self.params['gamma%d' % i], self.params['beta%d' % i]
+        outi , cachei = batchnorm_forward(outi, gamma, beta, self.bn_params[i-1])
+        caches.append(cachei)
       outi, cachei = relu_forward(outi)
-      outs.append(outi), caches.append(cachei)
-    scores, cachei = affine_forward(outs.pop(), 
+      caches.append(cachei)
+      if self.use_dropout:
+        outi, cachei = dropout_forward(outi, self.dropout_param)
+        caches.append(cachei)
+    scores, cachei = affine_forward(outi, 
                                     self.params['W%d' % self.num_layers], 
                                     self.params['b%d' % self.num_layers])
     caches.append(cachei)
@@ -281,13 +292,21 @@ class FullyConnectedNet(object):
     ############################################################################
     reg, num_layers = self.reg, self.num_layers
     loss, dloss_dscores = softmax_loss(scores, y)
-    loss += sum([0.5*reg*np.sum(v*v) for k, v in self.params.iteritems()])
+    p = re.compile('[Wb][0-9]+')
+
+    loss += sum([0.5*reg*np.sum(v*v) for k, v in self.params.iteritems() if p.match(k)])
     
     dx, dw, db = affine_backward(dloss_dscores, caches.pop())    # compute $L_n$
     grads['W%d' % num_layers] = dw + reg*self.params['W%d' % num_layers]
     grads['b%d' % num_layers] = db + reg*self.params['b%d' % num_layers]
-    for i in xrange(num_layers-1, 0, -1):         # compute $L_{n-1}, ..., L_1$
+    for i in xrange(num_layers-1, 0, -1):          # compute $L_{n-1}, ..., L_1$
+      if self.use_dropout:
+        dx = dropout_backward(dx, caches.pop())
       dx = relu_backward(dx, caches.pop())
+      if self.use_batchnorm:
+        dx, dgamma, dbeta = batchnorm_backward_alt(dx, caches.pop())
+        grads['gamma%d'%i] = dgamma
+        grads['beta%d'%i] = dbeta
       dx, dw, db = affine_backward(dx, caches.pop())
       grads['W%d' % i] = dw + reg*self.params['W%d' % i]
       grads['b%d' % i] = db + reg*self.params['b%d' % i]
