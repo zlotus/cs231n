@@ -452,14 +452,14 @@ def conv_forward_naive(x, w, b, conv_param):
   Wout = 1 + (W + 2 * pad - WW) / stride
   out = np.zeros((N, F, Hout, Wout))
 
-  for n in xrange(N):                                             # each sample
+  for n in xrange(N):                  # for each sample
                                        # before padding x[n].shape is (C, H, W)
     sample = np.zeros((C, H+2*pad, W+2*pad))
     sample[:, pad:-pad, pad:-pad] = x[n]
                                          # after padding: (C, H+2*pad, W+2*pad)
-    for f in xrange(F):                               # iteration of filter
-      for i in xrange(Hout):                       # vertical iteration of sample
-        for j in xrange(Wout):                   # horizontal iteration of sample
+    for f in xrange(F):                  # iteration of filter
+      for i in xrange(Hout):             # vertical iteration of sample
+        for j in xrange(Wout):           # horizontal iteration of sample
           wbg, wed = j*stride, j*stride+WW
           hbg, hed = i*stride, i*stride+HH
           flt = w[f]
