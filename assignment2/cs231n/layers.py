@@ -186,7 +186,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     # cache['gamma'], cache['beta'] = gamma, beta
     # cache['sample_mean'], cache['sample_var'] = sample_mean, sample_var
     # cache['eps'] = eps
-    # # up above is my work, but it seems a bit not quite "chainful".
+    # up above is my work, but it seems not quite "chainful".
     #############################################################################
     # ref: http://costapt.github.io/2016/06/26/batch-norm/
     sample_mean = np.mean(x, axis=0)
@@ -275,7 +275,7 @@ def batchnorm_backward(dout, cache):
   # dmean_dx = 1./N * np.ones([N, D]) # (N, D)
   # 
   # dx = dout_dx + dout_dmean*dmean_dx + dout_dvar*dvar_dx # (N, D)
-  # # up above is my work, and it looks like more analytical.
+  # up above is my work, and it looks like more analytical.
   #############################################################################
   # ref: http://costapt.github.io/2016/06/26/batch-norm/ 
   N, D = dout.shape
