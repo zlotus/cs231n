@@ -94,10 +94,7 @@ class KNearestNeighbor(object):
       # Compute the l2 distance between the ith test point and all training #
       # points, and store the result in dists[i, :].                        #
       #######################################################################
-      xtr_square = (self.X_train**2).dot(np.ones(self.X_train.shape[1]))
-      xte_square = X[i].dot(X[i].T)
-      xtr_dot_xte = self.X_train.dot(X[i])
-      dists[i] = (xtr_square+xte_square-2*xtr_dot_xte)**.5
+      dists[i] = np.sum((X[i]-self.X_train)**2, axis=1)**.5
       #######################################################################
       #                         END OF YOUR CODE                            #
       #######################################################################
@@ -125,8 +122,8 @@ class KNearestNeighbor(object):
     # HINT: Try to formulate the l2 distance using matrix multiplication    #
     #       and two broadcast sums.                                         #
     #########################################################################
-    Xtr_square = (self.X_train**2).dot(np.ones(self.X_train.shape[1])).reshape([1, self.X_train.shape[0]])
-    Xte_square = (X**2).dot(np.ones(X.shape[1])).reshape([X.shape[0], 1])
+    Xtr_square = np.sum(self.X_train**2, axis=1).reshape([1, self.X_train.shape[0]])
+    Xte_square = np.sum(X**2, axis=1).reshape([X.shape[0], 1])
     Xtr_dot_Xte = X.dot(self.X_train.T)
     dists = (Xtr_square+Xte_square-2*Xtr_dot_Xte)**.5
     #########################################################################
